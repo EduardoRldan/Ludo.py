@@ -1,5 +1,6 @@
 import tkinter as tk
 import random
+import winsound  # Para reproducir sonidos en Windows
 
 class LudoGame:
     def __init__(self, root):
@@ -7,7 +8,7 @@ class LudoGame:
         self.root.title("Juego de Ludo")
 
         # Dibujar el Tablero
-        self.canvas = tk.Canvas(root, width=600, height=600, bg="white")
+        self.canvas = tk.Canvas(root, width=600, height=600, bg="lightgrey")  # Cambié el color de fondo
         self.canvas.pack()
 
         # Estado del juego
@@ -24,13 +25,13 @@ class LudoGame:
         self.roll_count = 0
 
         # Interfaz del Usuario
-        self.status_label = tk.Label(root, text="Turno del Jugador 1", font=("Arial", 14))
+        self.status_label = tk.Label(root, text="Turno del Jugador 1", font=("Arial", 16, "bold"), bg="lightgreen", width=30)  # Mejorada la apariencia
         self.status_label.pack()
 
-        self.dice_label = tk.Label(root, text="Dado: ", font=("Arial", 14))
+        self.dice_label = tk.Label(root, text="Dado: ", font=("Arial", 14), bg="lightyellow", width=20)  # Mejorada la apariencia
         self.dice_label.pack()
 
-        self.roll_button = tk.Button(root, text="Lanzar Dado", command=self.roll_dice)
+        self.roll_button = tk.Button(root, text="Lanzar Dado", command=self.roll_dice, bg="lightblue", font=("Arial", 14), relief="raised", width=20)  # Mejorada la apariencia
         self.roll_button.pack()
 
         # Crear el tablero y fichas
@@ -91,9 +92,10 @@ class LudoGame:
             if player != self.turn and new_pos == pos:
                 self.positions[player] = 0
                 self.update_token_position(player)
+                self.play_capture_sound()  # Agregamos sonido para la captura
 
         self.positions[self.turn] = new_pos
-        self.update_token_position(self.turn)
+        self.animate_token_move(self.turn, current_pos, new_pos)  # Llamamos la función de animación
 
         # Verificar si el jugador ha ganado
         if new_pos == self.max_position:
@@ -102,6 +104,22 @@ class LudoGame:
         else:
             if self.roll_count == 0:
                 self.next_turn()
+
+    def animate_token_move(self, player, start_pos, end_pos):
+        """Función para animar el movimiento de la ficha"""
+        start_x, start_y, _, _ = self.get_coordinates(start_pos, player)
+        end_x, end_y, _, _ = self.get_coordinates(end_pos, player)
+        
+        steps = 20  # Definir la cantidad de pasos para la animación
+        delta_x = (end_x - start_x) / steps
+        delta_y = (end_y - start_y) / steps
+
+        def move(step=0):
+            if step <= steps:
+                self.canvas.move(self.tokens[player], delta_x, delta_y)
+                self.root.after(30, move, step + 1)  # Llama a la función cada 30ms para animar
+
+        move()  # Inicia la animación
 
     def update_token_position(self, player):
         """Actualiza la posición visual de una ficha"""
@@ -136,6 +154,10 @@ class LudoGame:
         next_index = (current_index + 1) % len(players)
         self.turn = players[next_index]
         self.status_label.config(text=f"Turno de {self.turn}")
+
+    def play_capture_sound(self):
+        """Reproduce el sonido de captura de ficha"""
+        winsound.Beep(1000, 500)  # Tono de 1000Hz durante 500ms (ajustar según lo que desees)
 
 if __name__ == "__main__":
     root = tk.Tk()
